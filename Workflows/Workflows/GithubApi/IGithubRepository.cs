@@ -1,4 +1,5 @@
-﻿namespace WorkflowsEx.GithubApi;
+﻿
+namespace WorkflowsEx.GithubApi;
 
 using Refit;
 using System.Threading.Tasks;

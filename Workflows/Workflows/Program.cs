@@ -3,7 +3,6 @@
 using Refit;
 using System;
 using System.IO;
-using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using WorkflowCore.Interface;
@@ -14,12 +13,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 public static class WorkflowHostFactory
 {
-    public static IWorkflowHost Create()
+    public static IWorkflowHost Create(ServiceCollection services)
     {
-        IServiceCollection services = new ServiceCollection();
-        services.AddLogging();
-        services.AddWorkflow(); // in-memory persistence
-
         var serviceProvider = services.BuildServiceProvider();
         return serviceProvider.GetService<IWorkflowHost>();
     }
@@ -29,20 +24,27 @@ public sealed class Program
 {
     public static async Task Main(string[] args)
     {
+        ServiceCollection services = new ServiceCollection();
+        services.AddLogging();
+        services.AddWorkflow(); // in-memory persistence
+
         ConfigurationSettings settings = JsonSerializer.Deserialize<ConfigurationSettings>(File.ReadAllText("appsettings.json"));
 
-        await SampleGithubRepoWithRefitAsync(settings);
-        await SampleWorkflowAsync();
+        await SampleGithubRepoWithRefitAsync(services, settings);
+        await SampleWorkflowAsync(services);
     }
 
-    public static async Task SampleGithubRepoWithRefitAsync(ConfigurationSettings settings)
+    public static async Task SampleGithubRepoWithRefitAsync(ServiceCollection services, ConfigurationSettings settings)
     {
-        var httpClient = new HttpClient() { BaseAddress = new Uri(settings.GithubUrl) };
+        services.AddRefitClient<IGithubRepository>().ConfigureHttpClient(client =>
+        {
+            client.BaseAddress = new Uri(settings.GithubUrl);
 
-        // Required by many HTTP servers.
-        httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("my-refit-app");
+            // Required by many HTTP servers.
+            client.DefaultRequestHeaders.UserAgent.ParseAdd("my-refit-app");
+        });
 
-        IGithubRepository client = RestService.For<IGithubRepository>(httpClient);
+        IGithubRepository client = services.BuildServiceProvider().GetRequiredService<IGithubRepository>();
 
         GithubUserResponse githubUserResponse = await client.GetUserAsync("vladboss61");
 
@@ -59,9 +61,9 @@ public sealed class Program
         Console.WriteLine(githubRepositoriesResponse.ToString());
     }
 
-    public static async Task SampleWorkflowAsync()
+    public static async Task SampleWorkflowAsync(ServiceCollection services)
     {
-        var host = WorkflowHostFactory.Create();
+        var host = WorkflowHostFactory.Create(services);
 
         host.RegisterWorkflow<OrderWorkflow, OrderData>();
 
