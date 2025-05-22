@@ -10,6 +10,7 @@ using WorkflowsEx.Data;
 using WorkflowsEx.GithubApi;
 using WorkflowsEx.Workflows;
 using Microsoft.Extensions.DependencyInjection;
+using WorkflowsEx.Infrastructure;
 
 public static class WorkflowHostFactory
 {
@@ -35,13 +36,14 @@ public sealed class Program
 
     public static async Task SampleGithubRepoWithRefitAsync(ServiceCollection services, ConfigurationSettings settings)
     {
+        services.AddTransient<LoggingDelegatingHandler>();
         services.AddRefitClient<IGithubRepository>().ConfigureHttpClient(client =>
         {
             client.BaseAddress = new Uri(settings.GithubUrl);
 
             // Required by many HTTP servers.
             client.DefaultRequestHeaders.UserAgent.ParseAdd("my-refit-app");
-        });
+        }).AddHttpMessageHandler<LoggingDelegatingHandler>();
 
         IGithubRepository client = services.BuildServiceProvider().GetRequiredService<IGithubRepository>();
 
