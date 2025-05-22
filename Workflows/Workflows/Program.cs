@@ -24,13 +24,12 @@ public sealed class Program
 {
     public static async Task Main(string[] args)
     {
-        ServiceCollection services = new ServiceCollection();
-        services.AddLogging();
-        services.AddWorkflow(); // in-memory persistence
-
         ConfigurationSettings settings = JsonSerializer.Deserialize<ConfigurationSettings>(File.ReadAllText("appsettings.json"));
 
+        ServiceCollection services = new ServiceCollection();
+
         await SampleGithubRepoWithRefitAsync(services, settings);
+
         await SampleWorkflowAsync(services);
     }
 
@@ -63,6 +62,9 @@ public sealed class Program
 
     public static async Task SampleWorkflowAsync(ServiceCollection services)
     {
+        services.AddLogging();
+        services.AddWorkflow(); // in-memory persistence
+
         var host = WorkflowHostFactory.Create(services);
 
         host.RegisterWorkflow<OrderWorkflow, OrderData>();
