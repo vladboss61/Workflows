@@ -1,18 +1,6 @@
 ﻿namespace WorkflowsEx.GithubApi;
 
-using Newtonsoft.Json;
 using Refit;
-
-public enum GithubSortParams
-{
-    Stars
-}
-
-public enum Order
-{
-    Asc,
-    Desc,
-}
 
 public class GithubQueryParamsRequest
 {

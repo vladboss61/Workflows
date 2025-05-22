@@ -13,10 +13,10 @@ public sealed class OrderWorkflow : IWorkflow<OrderData>
     public void Build(IWorkflowBuilder<OrderData> builder)
     {
         builder
-            .StartWith<ReserveInventory>()
+            .StartWith<ReserveInventoryStep>()
                 .Input((step, data) => step.OrderId = data.OrderId)
-                .CompensateWith<ReleaseInventory>()
-            .Then<ChargePayment>()
-                .CompensateWith<RefundPayment>();
+                .CompensateWith<ReleaseInventoryCompensationStep>()
+            .Then<ChargePaymentStep>()
+                .CompensateWith<RefundPaymentCompensationStep>();
     }
 }

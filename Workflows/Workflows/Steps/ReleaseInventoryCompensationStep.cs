@@ -1,14 +1,14 @@
-﻿using System;
+﻿namespace WorkflowsEx.Steps;
+
+using System;
 using WorkflowCore.Interface;
 using WorkflowCore.Models;
 
-namespace WorkflowsEx.Steps;
-
-public sealed class RefundPayment : StepBody
+public sealed class ReleaseInventoryCompensationStep : StepBody
 {
     public override ExecutionResult Run(IStepExecutionContext context)
     {
-        Console.WriteLine("Payment refunded (compensation)");
+        Console.WriteLine("Inventory released (compensation)");
         return ExecutionResult.Next();
     }
 }

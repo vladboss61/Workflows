@@ -1,7 +1,7 @@
-﻿using Refit;
-using System.Threading.Tasks;
+﻿namespace WorkflowsEx.GithubApi;
 
-namespace WorkflowsEx.GithubApi;
+using Refit;
+using System.Threading.Tasks;
 
 public interface IGithubRepository
 {

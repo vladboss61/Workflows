@@ -1,10 +1,10 @@
-﻿using System;
+﻿namespace WorkflowsEx.Steps;
+
+using System;
 using WorkflowCore.Interface;
 using WorkflowCore.Models;
 
-namespace WorkflowsEx.Steps;
-
-public sealed class ReserveInventory : StepBody
+public sealed class ReserveInventoryStep : StepBody
 {
     public string OrderId { get; set; }
 

@@ -1,6 +1,6 @@
 ﻿namespace WorkflowsEx.GithubApi;
 
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 public sealed class GithubUserResponse
 {
@@ -8,7 +8,7 @@ public sealed class GithubUserResponse
 
     public int Id { get; set; }
 
-    [JsonProperty("avatar_url")]
+    [JsonPropertyName("avatar_url")]
     public string AvatarUrl { get; set; }
 
     public override string ToString()

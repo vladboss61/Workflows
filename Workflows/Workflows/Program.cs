@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿namespace WorkflowsEx;
+
 using Refit;
 using System;
 using System.IO;
@@ -9,8 +10,7 @@ using WorkflowCore.Interface;
 using WorkflowsEx.Data;
 using WorkflowsEx.GithubApi;
 using WorkflowsEx.Workflows;
-
-namespace WorkflowsEx;
+using Microsoft.Extensions.DependencyInjection;
 
 public static class WorkflowHostFactory
 {
@@ -25,12 +25,18 @@ public static class WorkflowHostFactory
     }
 }
 
-internal sealed class Program
+public sealed class Program
 {
     public static async Task Main(string[] args)
     {
-        var settings = JsonSerializer.Deserialize<ConfigurationSettings>(File.ReadAllText("appsettings.json"));
+        ConfigurationSettings settings = JsonSerializer.Deserialize<ConfigurationSettings>(File.ReadAllText("appsettings.json"));
 
+        await SampleGithubRepoWithRefitAsync(settings);
+        await SampleWorkflowAsync();
+    }
+
+    public static async Task SampleGithubRepoWithRefitAsync(ConfigurationSettings settings)
+    {
         var httpClient = new HttpClient() { BaseAddress = new Uri(settings.GithubUrl) };
 
         // Required by many HTTP servers.
@@ -50,6 +56,11 @@ internal sealed class Program
                 Order = nameof(Order.Desc)
             });
 
+        Console.WriteLine(githubRepositoriesResponse.ToString());
+    }
+
+    public static async Task SampleWorkflowAsync()
+    {
         var host = WorkflowHostFactory.Create();
 
         host.RegisterWorkflow<OrderWorkflow, OrderData>();
