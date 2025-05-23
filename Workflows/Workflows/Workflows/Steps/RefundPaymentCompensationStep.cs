@@ -1,4 +1,4 @@
-﻿namespace WorkflowsEx.Steps;
+﻿namespace WorkflowsEx.Workflows.Steps;
 
 using System;
 using WorkflowCore.Interface;

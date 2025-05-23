@@ -1,8 +1,8 @@
 ﻿namespace WorkflowsEx.Workflows;
 
-using WorkflowsEx.Data;
 using WorkflowCore.Interface;
-using WorkflowsEx.Steps;
+using WorkflowsEx.Workflows.Steps;
+using WorkflowsEx.Workflows.Data;
 
 public sealed class OrderWorkflow : IWorkflow<OrderData>
 {

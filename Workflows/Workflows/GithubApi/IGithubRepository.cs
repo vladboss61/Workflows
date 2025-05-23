@@ -3,6 +3,7 @@ namespace WorkflowsEx.GithubApi;
 
 using Refit;
 using System.Threading.Tasks;
+using WorkflowsEx.GithubApi.Models;
 
 // Alternatives for set-up User-Agent header compare to in Program.cs
 [Headers("User-Agent: my-refit-app")]

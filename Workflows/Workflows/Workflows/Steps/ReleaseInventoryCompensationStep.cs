@@ -1,16 +1,14 @@
-﻿namespace WorkflowsEx.Steps;
+﻿namespace WorkflowsEx.Workflows.Steps;
 
 using System;
 using WorkflowCore.Interface;
 using WorkflowCore.Models;
 
-public sealed class ReserveInventoryStep : StepBody
+public sealed class ReleaseInventoryCompensationStep : StepBody
 {
-    public string OrderId { get; set; }
-
     public override ExecutionResult Run(IStepExecutionContext context)
     {
-        Console.WriteLine($"Inventory reserved | OrderId {OrderId}");
+        Console.WriteLine("Inventory released (compensation)");
         return ExecutionResult.Next();
     }
 }

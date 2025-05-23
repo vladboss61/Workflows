@@ -1,4 +1,4 @@
-﻿namespace WorkflowsEx.GithubApi;
+﻿namespace WorkflowsEx.GithubApi.Models;
 
 using System.Text;
 using System.Text.Json.Serialization;

@@ -1,4 +1,4 @@
-﻿namespace WorkflowsEx.GithubApi;
+﻿namespace WorkflowsEx.GithubApi.Models;
 
 using Refit;
 

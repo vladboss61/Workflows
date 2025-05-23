@@ -6,20 +6,12 @@ using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
 using WorkflowCore.Interface;
-using WorkflowsEx.Data;
 using WorkflowsEx.GithubApi;
 using WorkflowsEx.Workflows;
 using Microsoft.Extensions.DependencyInjection;
 using WorkflowsEx.Infrastructure;
-
-public static class WorkflowHostFactory
-{
-    public static IWorkflowHost Create(ServiceCollection services)
-    {
-        var serviceProvider = services.BuildServiceProvider();
-        return serviceProvider.GetService<IWorkflowHost>();
-    }
-}
+using Microsoft.Extensions.Logging;
+using WorkflowsEx.Workflows.Data;
 
 public sealed class Program
 {
@@ -29,53 +21,48 @@ public sealed class Program
 
         ServiceCollection services = new ServiceCollection();
 
-        await SampleGithubRepoWithRefitAsync(services, settings);
+        services.AddOptions<ConfigurationSettings>().Configure(x => x.GithubUrl = settings.GithubUrl);
+        
+        services.AddTransient<LoggingDelegatingHandler>();
 
-        await SampleWorkflowAsync(services);
+        AddRemoteRefitClient<IGithubRepository>(services, (settings) => settings.GithubUrl);
+
+        services.AddLogging(builder =>
+        {
+            // Optional: filter out low-level logs
+            // We can read in from appsettings.json or configure here.
+            builder
+                .AddFilter("Default", LogLevel.Information)
+                .AddFilter("Microsoft", LogLevel.Warning)
+                .AddConsole();
+        });
+
+        services.AddWorkflow(); // in-memory persistence
+
+        services.AddSingleton<Application>();
+
+        ConfigureWorkflows(services);
+
+        await services.BuildServiceProvider().GetRequiredService<Application>().RunAsync();
     }
 
-    public static async Task SampleGithubRepoWithRefitAsync(ServiceCollection services, ConfigurationSettings settings)
+    private static void AddRemoteRefitClient<T>(ServiceCollection services, Func<ConfigurationSettings, string> urlConfigure)
     {
-        services.AddTransient<LoggingDelegatingHandler>();
+        var settings = services.BuildServiceProvider().GetRequiredService<ConfigurationSettings>();
         services.AddRefitClient<IGithubRepository>().ConfigureHttpClient(client =>
         {
-            client.BaseAddress = new Uri(settings.GithubUrl);
+            client.BaseAddress = new Uri(urlConfigure(settings));
 
             // Required by many HTTP servers.
             client.DefaultRequestHeaders.UserAgent.ParseAdd("my-refit-app");
         }).AddHttpMessageHandler<LoggingDelegatingHandler>();
-
-        IGithubRepository client = services.BuildServiceProvider().GetRequiredService<IGithubRepository>();
-
-        GithubUserResponse githubUserResponse = await client.GetUserAsync("vladboss61");
-
-        Console.WriteLine(githubUserResponse.ToString());
-
-        GithubRepositoriesResponse githubRepositoriesResponse = await client.GetRepositoriesAsync(
-            new GithubQueryParamsRequest
-            {
-                Query = "language:python",
-                Sort = nameof(GithubSortParams.Stars),
-                Order = nameof(Order.Desc)
-            });
-
-        Console.WriteLine(githubRepositoriesResponse.ToString());
     }
 
-    public static async Task SampleWorkflowAsync(ServiceCollection services)
+    public static void ConfigureWorkflows(ServiceCollection services)
     {
-        services.AddLogging();
-        services.AddWorkflow(); // in-memory persistence
-
-        var host = WorkflowHostFactory.Create(services);
+        var serviceProvider = services.BuildServiceProvider();
+        var host = serviceProvider.GetService<IWorkflowHost>();
 
         host.RegisterWorkflow<OrderWorkflow, OrderData>();
-
-        host.Start();
-
-        await host.StartWorkflow(nameof(OrderWorkflow), 1, new OrderData { OrderId = Guid.NewGuid().ToString() });
-
-        Console.ReadLine();
-        host.Stop();
     }
 }
