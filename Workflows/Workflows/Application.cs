@@ -1,11 +1,13 @@
-﻿using Microsoft.Extensions.Logging;
-using System;
+﻿using System;
 using System.Threading.Tasks;
 using WorkflowCore.Interface;
+using WorkflowsEx.DogsApi;
+using WorkflowsEx.DogsApi.Models;
 using WorkflowsEx.GithubApi;
 using WorkflowsEx.GithubApi.Models;
 using WorkflowsEx.Workflows;
 using WorkflowsEx.Workflows.Data;
+using Microsoft.Extensions.Logging;
 
 namespace WorkflowsEx;
 
@@ -13,12 +15,18 @@ internal class Application
 {
     private readonly IWorkflowHost _workflowHost;
     private readonly IGithubRepository _githubRepository;
+    private readonly IDogsRepository _dogsRepository;
     private readonly ILogger<Application> _logger;
 
-    public Application(IWorkflowHost workflowHost, IGithubRepository githubRepository, ILogger<Application> logger)
+    public Application(
+        IWorkflowHost workflowHost,
+        IGithubRepository githubRepository,
+        IDogsRepository dogsRepository,
+        ILogger<Application> logger)
     {
         _workflowHost = workflowHost;
         _githubRepository = githubRepository;
+        _dogsRepository = dogsRepository;
         _logger = logger;
     }
 
@@ -28,6 +36,7 @@ internal class Application
 
         GithubUserResponse githubUserResponse = await _githubRepository.GetUserAsync("vladboss61");
 
+        DogRandomResponse randomDog = await _dogsRepository.GetRandomDogAsync();
         Console.WriteLine(githubUserResponse.ToString());
 
         GithubRepositoriesResponse githubRepositoriesResponse = await _githubRepository.GetRepositoriesAsync(

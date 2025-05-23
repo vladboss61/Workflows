@@ -12,6 +12,8 @@ using Microsoft.Extensions.DependencyInjection;
 using WorkflowsEx.Infrastructure;
 using Microsoft.Extensions.Logging;
 using WorkflowsEx.Workflows.Data;
+using WorkflowsEx.DogsApi;
+using Microsoft.Extensions.Options;
 
 public sealed class Program
 {
@@ -21,11 +23,16 @@ public sealed class Program
 
         ServiceCollection services = new ServiceCollection();
 
-        services.AddOptions<ConfigurationSettings>().Configure(x => x.GithubUrl = settings.GithubUrl);
+        services.AddOptions<ConfigurationSettings>().Configure(x =>
+        {
+            x.GithubUrl = settings.GithubUrl;
+            x.DogsUrl = settings.DogsUrl;
+        });
         
         services.AddTransient<LoggingDelegatingHandler>();
 
         AddRemoteRefitClient<IGithubRepository>(services, (settings) => settings.GithubUrl);
+        AddRemoteRefitClient<IDogsRepository>(services, (settings) => settings.DogsUrl);
 
         services.AddLogging(builder =>
         {
@@ -49,7 +56,7 @@ public sealed class Program
     private static void AddRemoteRefitClient<T>(ServiceCollection services, Func<ConfigurationSettings, string> urlConfigure)
         where T : class
     {
-        var settings = services.BuildServiceProvider().GetRequiredService<ConfigurationSettings>();
+        var settings = services.BuildServiceProvider().GetRequiredService<IOptions<ConfigurationSettings>>().Value;
         services.AddRefitClient<T>().ConfigureHttpClient(client =>
         {
             client.BaseAddress = new Uri(urlConfigure(settings));
