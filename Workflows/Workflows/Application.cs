@@ -2,10 +2,10 @@
 using System;
 using System.Threading.Tasks;
 using WorkflowCore.Interface;
-using WorkflowsEx.Data;
 using WorkflowsEx.GithubApi;
 using WorkflowsEx.GithubApi.Models;
 using WorkflowsEx.Workflows;
+using WorkflowsEx.Workflows.Data;
 
 namespace WorkflowsEx;
 
