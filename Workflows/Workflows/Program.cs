@@ -47,9 +47,10 @@ public sealed class Program
     }
 
     private static void AddRemoteRefitClient<T>(ServiceCollection services, Func<ConfigurationSettings, string> urlConfigure)
+        where T : class
     {
         var settings = services.BuildServiceProvider().GetRequiredService<ConfigurationSettings>();
-        services.AddRefitClient<IGithubRepository>().ConfigureHttpClient(client =>
+        services.AddRefitClient<T>().ConfigureHttpClient(client =>
         {
             client.BaseAddress = new Uri(urlConfigure(settings));
 
