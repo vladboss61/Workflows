@@ -35,9 +35,10 @@ internal class Application
         _logger.LogInformation("🚀 ~ Start Application ~ 🚀");
 
         GithubUserResponse githubUserResponse = await _githubRepository.GetUserAsync("vladboss61");
+        _logger.LogInformation(githubUserResponse.ToString());
 
         DogRandomResponse randomDog = await _dogsRepository.GetRandomDogAsync();
-        Console.WriteLine(githubUserResponse.ToString());
+        _logger.LogInformation(randomDog.ToString());
 
         GithubRepositoriesResponse githubRepositoriesResponse = await _githubRepository.GetRepositoriesAsync(
             new GithubQueryParamsRequest
