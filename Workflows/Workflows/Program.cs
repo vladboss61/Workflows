@@ -1,38 +1,51 @@
 ﻿namespace WorkflowsEx;
 
-using Refit;
 using System;
 using System.IO;
-using System.Text.Json;
 using System.Threading.Tasks;
 using WorkflowCore.Interface;
 using WorkflowsEx.GithubApi;
 using WorkflowsEx.Workflows;
-using Microsoft.Extensions.DependencyInjection;
 using WorkflowsEx.Infrastructure;
-using Microsoft.Extensions.Logging;
 using WorkflowsEx.Workflows.Data;
 using WorkflowsEx.DogsApi;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Configuration;
+using Refit;
+using System.Net.Http.Headers;
+using System.Threading;
+using System.Net.Mime;
+using System.Net.Http;
+using Polly;
+using Polly.Timeout;
+using Polly.Extensions.Http;
+using Polly.CircuitBreaker;
+using Polly.Retry;
 
 public sealed class Program
 {
     public static async Task Main(string[] args)
     {
-        ConfigurationSettings settings = JsonSerializer.Deserialize<ConfigurationSettings>(File.ReadAllText("appsettings.json"));
+        var configuration = new ConfigurationBuilder()
+            .SetBasePath(Directory.GetCurrentDirectory())
+            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+            .AddUserSecrets<Program>()
+            .AddEnvironmentVariables()
+            .Build();
 
         ServiceCollection services = new ServiceCollection();
 
-        services.AddOptions<ConfigurationSettings>().Configure(x =>
-        {
-            x.GithubUrl = settings.GithubUrl;
-            x.DogsUrl = settings.DogsUrl;
-        });
+        services.AddSingleton<IConfiguration>(configuration);
+        services.Configure<ConfigurationSettings>(configuration);
+        
+        var settings = services.BuildServiceProvider().GetRequiredService<IOptions<ConfigurationSettings>>().Value;
         
         services.AddTransient<LoggingDelegatingHandler>();
 
-        AddRemoteRefitClient<IGithubRepository>(services, (settings) => settings.GithubUrl);
-        AddRemoteRefitClient<IDogsRepository>(services, (settings) => settings.DogsUrl);
+        AddRemoteRefitClient<IGithubRepository>(services, settings.GithubUrl);
+        AddRemoteRefitClient<IDogsRepository>(services, settings.DogsUrl);
 
         services.AddLogging(builder =>
         {
@@ -46,24 +59,56 @@ public sealed class Program
 
         services.AddWorkflow(); // in-memory persistence
 
-        services.AddSingleton<Application>();
-
         ConfigureWorkflows(services);
 
+        services.AddSingleton<Application>();
         await services.BuildServiceProvider().GetRequiredService<Application>().RunAsync();
     }
 
-    private static void AddRemoteRefitClient<T>(ServiceCollection services, Func<ConfigurationSettings, string> urlConfigure)
+    private static void AddRemoteRefitClient<T>(ServiceCollection services, string baseAddressUrl)
         where T : class
     {
-        var settings = services.BuildServiceProvider().GetRequiredService<IOptions<ConfigurationSettings>>().Value;
         services.AddRefitClient<T>().ConfigureHttpClient(client =>
         {
-            client.BaseAddress = new Uri(urlConfigure(settings));
+            client.BaseAddress = new Uri(baseAddressUrl);
 
-            // Required by many HTTP servers.
-            client.DefaultRequestHeaders.UserAgent.ParseAdd("my-refit-app");
-        }).AddHttpMessageHandler<LoggingDelegatingHandler>();
+            client.Timeout = Timeout.InfiniteTimeSpan;
+            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue(MediaTypeNames.Application.Json));
+            client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("corporation-my-refit-app", "1.0.0"));
+        }).AddHttpMessageHandler<LoggingDelegatingHandler>()
+          .AddPolicyHandler(GetTimeoutPolicy())
+          .AddPolicyHandler(GetCircuitBreakerPolicy())
+          .AddPolicyHandler(GetRetryPolicy()); ;
+    }
+
+    private static AsyncRetryPolicy<HttpResponseMessage> GetRetryPolicy()
+    {
+        return HttpPolicyExtensions
+            .HandleTransientHttpError()
+            .WaitAndRetryAsync(
+                retryCount: 3,
+                attempt => TimeSpan.FromMilliseconds(
+                    (1 << attempt) * 1000 +
+                    DateTime.UtcNow.Ticks % 2000),
+                (responseMessage, _, retryNumber, _) => Console.WriteLine($"Polly retry number ${retryNumber}"));
+    }
+
+    private static AsyncCircuitBreakerPolicy<HttpResponseMessage> GetCircuitBreakerPolicy()
+    {
+        return HttpPolicyExtensions
+            .HandleTransientHttpError()
+            .Or<TaskCanceledException>()
+            .CircuitBreakerAsync(handledEventsAllowedBeforeBreaking: 3, TimeSpan.FromMilliseconds(60000));
+    }
+
+    private static IAsyncPolicy<HttpResponseMessage> GetTimeoutPolicy()
+    {
+        return Policy
+            .TimeoutAsync(
+                timeout: TimeSpan.FromMilliseconds(30000),
+                TimeoutStrategy.Optimistic,
+                (_, _, _, exception) => Task.FromException(new TimeoutException("The HTTP request has timed out.", exception)))
+            .AsAsyncPolicy<HttpResponseMessage>();
     }
 
     public static void ConfigureWorkflows(ServiceCollection services)
