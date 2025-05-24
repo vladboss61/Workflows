@@ -76,10 +76,10 @@ public sealed class Program
         services.AddRefitClient<T>().ConfigureHttpClient(client =>
         {
             client.BaseAddress = new Uri(baseAddressUrl);
-
             client.Timeout = Timeout.InfiniteTimeSpan;
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue(MediaTypeNames.Application.Json));
             client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("corporation-my-refit-app", "1.0.0"));
+
         }).AddHttpMessageHandler<LoggingDelegatingHandler>()
           .AddPolicyHandler(GetTimeoutPolicy())
           .AddPolicyHandler(GetCircuitBreakerPolicy())
