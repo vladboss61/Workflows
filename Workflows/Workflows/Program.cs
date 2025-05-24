@@ -26,6 +26,8 @@ using Polly.Retry;
 
 public sealed class Program
 {
+    private static ILogger<Application> _logger;
+
     public static async Task Main(string[] args)
     {
         var configuration = new ConfigurationBuilder()
@@ -57,6 +59,8 @@ public sealed class Program
                 .AddFilter("Microsoft", LogLevel.Warning)
                 .AddConsole();
         });
+
+        _logger = services.BuildServiceProvider().GetRequiredService<ILogger<Application>>();
 
         services.AddWorkflow(); // in-memory persistence
 
@@ -91,7 +95,7 @@ public sealed class Program
                 attempt => TimeSpan.FromMilliseconds(
                     (1 << attempt) * 1000 +
                     DateTime.UtcNow.Ticks % 2000),
-                (responseMessage, _, retryNumber, _) => Console.WriteLine($"Polly retry number ${retryNumber}"));
+                static (responseMessage, _, retryNumber, _) => _logger.LogWarning($"Polly retry number ${retryNumber}"));
     }
 
     private static AsyncCircuitBreakerPolicy<HttpResponseMessage> GetCircuitBreakerPolicy()
