@@ -47,6 +47,7 @@ public sealed class Program
         AddRemoteRefitClient<IGithubRepository>(services, settings.GithubUrl);
         AddRemoteRefitClient<IDogsRepository>(services, settings.DogsUrl);
 
+        // Default Microsoft Logger.
         services.AddLogging(builder =>
         {
             // Optional: filter out low-level logs
