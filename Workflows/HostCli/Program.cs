@@ -4,6 +4,10 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Serilog;
+using Serilog.Exceptions;
+using System;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace HostCli;
 
@@ -31,15 +35,24 @@ public class Program
 {
     static async Task Main(string[] args)
     {
+        string env = Environment.GetEnvironmentVariable("ENVIRONMENT") ?? Environments.Production;
+
         var configuration = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())
             .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+            .AddJsonFile($"appsettings.{env}.json", optional: true, reloadOnChange: true)
+            .AddUserSecrets<Program>()
             .AddEnvironmentVariables()
             .Build();
 
         Log.Logger = new LoggerConfiguration()
             .ReadFrom.Configuration(configuration)
-        .CreateLogger();
+            .Enrich.WithMachineName()
+            .Enrich.WithProperty("ApplicationName", "Ex CLI App")
+            .Enrich.WithProperty("ApplicationVersion", "1.0.0")
+            .Enrich.WithExceptionDetails()
+            .Enrich.FromLogContext()
+            .CreateLogger();
 
         try
         {
@@ -47,9 +60,11 @@ public class Program
 
             var host = Host.CreateDefaultBuilder(args)
                 .UseSerilog(Log.Logger)
-                .ConfigureAppConfiguration(builder => builder.AddConfiguration(configuration))
-                .ConfigureServices((context, services) =>
-                {
+                .ConfigureAppConfiguration(builder => {
+                    builder.Sources.Clear();
+                    builder.AddConfiguration(configuration);
+                })
+                .ConfigureServices((context, services) => {
                     services.Configure<MySettings>(configuration.GetSection("MyApp"));
                     services.AddTransient<App>();
                 })
