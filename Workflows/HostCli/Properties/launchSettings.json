@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "HostCli": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "ENVIRONMENT": "Staging"
+      }
+    }
+  }
+}
