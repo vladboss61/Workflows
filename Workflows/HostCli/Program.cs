@@ -92,7 +92,7 @@ public class Program
         }
         catch (TaskCanceledException taskEx)
         {
-            Log.Information(taskEx, "Application canceled.");
+            Log.Warning(taskEx, "Application canceled.");
         }
         catch (Exception ex)
         {
