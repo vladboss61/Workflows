@@ -20,9 +20,9 @@ public sealed class Startup
 
     public async Task ConfigureServices(IServiceCollection services)
     {
-        services.Configure<MyApp>(_configuration.GetSection(nameof(MyApp)));
+        services.Configure<MyAppSettings>(_configuration.GetSection(nameof(MyAppSettings)));
+        services.AddTransient<Application>();
 
-        services.AddTransient<App>();
         await Task.CompletedTask;
     }
 }

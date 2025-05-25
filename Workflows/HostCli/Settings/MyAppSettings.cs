@@ -1,7 +1,7 @@
 ﻿namespace HostCli.Settings;
 
 // --- MySettings class ---
-public class MyApp
+public class MyAppSettings
 {
     public string Message { get; set; }
 }

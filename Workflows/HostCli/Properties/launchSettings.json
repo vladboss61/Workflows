@@ -3,7 +3,7 @@
     "HostCli": {
       "commandName": "Project",
       "environmentVariables": {
-        "ENVIRONMENT": "Staging"
+        "ENVIRONMENT": ""
       }
     }
   }

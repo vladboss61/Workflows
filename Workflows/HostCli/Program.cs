@@ -14,13 +14,12 @@ using System.Threading.Tasks;
 
 namespace HostCli;
 
-// --- App class ---
-public class App
+public class Application
 {
-    private readonly ILogger<App> _logger;
-    private readonly MyApp _settings;
+    private readonly ILogger<Application> _logger;
+    private readonly MyAppSettings _settings;
 
-    public App(ILogger<App> logger, IOptions<MyApp> options)
+    public Application(ILogger<Application> logger, IOptions<MyAppSettings> options)
     {
         _logger = logger;
         _settings = options.Value;
@@ -33,6 +32,7 @@ public class App
         while (!cancellationToken.IsCancellationRequested)
         {
             Console.WriteLine($"Message from config: {_settings.Message}");
+
             // your main loop logic here
             await Task.Delay(2500, cancellationToken); // Example
         }
@@ -62,17 +62,18 @@ public class Program
             .Enrich.FromLogContext()
             .CreateLogger();
 
+        CancellationTokenSource cancellationTokenSource = PrepareConsoleCancellationTokenSource();
+
         try
         {
             Log.Information("Starting up application.");
-
-            CancellationTokenSource cancellationTokenSource = PrepareConsoleCancellationTokenSource();
 
             var host = Host.CreateDefaultBuilder(args)
                 .UseContentRoot(Directory.GetCurrentDirectory())
                 .UseEnvironment(env)
                 .UseSerilog(Log.Logger)
-                .ConfigureAppConfiguration(builder => {
+                .ConfigureAppConfiguration(builder =>
+                {
                     // Not required but okey - Clear().
                     builder.Sources.Clear();
                     builder.AddConfiguration(configuration);
@@ -84,19 +85,17 @@ public class Program
                 })
                 .Build();
 
-            var app = host.Services.GetRequiredService<App>();
+            var app = host.Services.GetRequiredService<Application>();
             await app.RunAsync(cancellationTokenSource.Token);
 
             Log.Information("Shutting down application");
         }
+        catch (TaskCanceledException taskEx)
+        {
+            Log.Information(taskEx, "Application canceled.");
+        }
         catch (Exception ex)
         {
-            if (ex is TaskCanceledException)
-            {
-                Log.Information(ex, "Application canceled.");
-                return;
-            }
-
             Log.Fatal(ex, "Application terminated unexpectedly");
         }
         finally
@@ -109,14 +108,15 @@ public class Program
     {
         var cancellationTokenSource = new CancellationTokenSource();
 
-        // Cancel on Ctrl+C or SIGTERM
-        Console.CancelKeyPress += (sender, e) =>
+        ConsoleCancelEventHandler cancelKeyPressSubscriber = (sender, e) =>
         {
             Log.Logger.Information("Ctrl+C is executed and operation is cancelled");
             e.Cancel = true;
             cancellationTokenSource.Cancel();
         };
 
+        // Cancel on Ctrl+C or SIGTERM
+        Console.CancelKeyPress += cancelKeyPressSubscriber;
         AssemblyLoadContext.Default.Unloading += ctx => cancellationTokenSource.Cancel();
 
         return cancellationTokenSource;
