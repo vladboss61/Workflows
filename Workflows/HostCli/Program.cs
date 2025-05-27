@@ -14,31 +14,6 @@ using System.Threading.Tasks;
 
 namespace HostCli;
 
-public class Application
-{
-    private readonly ILogger<Application> _logger;
-    private readonly MyAppSettings _settings;
-
-    public Application(ILogger<Application> logger, IOptions<MyAppSettings> options)
-    {
-        _logger = logger;
-        _settings = options.Value;
-    }
-
-    public async Task RunAsync(CancellationToken cancellationToken)
-    {
-        _logger.LogInformation("Message from config: {Message}", _settings.Message ?? "none");
-
-        while (!cancellationToken.IsCancellationRequested)
-        {
-            Console.WriteLine($"Message from config: {_settings.Message}");
-
-            // your main loop logic here
-            await Task.Delay(2500, cancellationToken); // Example
-        }
-    }
-}
-
 public class Program
 {
     static async Task Main(string[] args)
@@ -72,6 +47,7 @@ public class Program
                 .UseContentRoot(Directory.GetCurrentDirectory())
                 .UseEnvironment(env)
                 .UseSerilog(Log.Logger)
+                //.UseConsoleLifetime()
                 .ConfigureAppConfiguration(builder =>
                 {
                     // Not required but okey - Clear().
@@ -108,15 +84,15 @@ public class Program
     {
         var cancellationTokenSource = new CancellationTokenSource();
 
-        ConsoleCancelEventHandler cancelKeyPressSubscriber = (sender, e) =>
-        {
-            Log.Logger.Information("Ctrl+C is executed and operation is cancelled");
-            e.Cancel = true;
-            cancellationTokenSource.Cancel();
-        };
+        //ConsoleCancelEventHandler cancelKeyPressSubscriber = (sender, e) =>
+        //{
+        //    Log.Logger.Information("Ctrl+C is executed and operation is cancelled");
+        //    e.Cancel = true;
+        //    cancellationTokenSource.Cancel();
+        //};
 
         // Cancel on Ctrl+C or SIGTERM
-        Console.CancelKeyPress += cancelKeyPressSubscriber;
+        //Console.CancelKeyPress += cancelKeyPressSubscriber;
         AssemblyLoadContext.Default.Unloading += ctx => cancellationTokenSource.Cancel();
 
         return cancellationTokenSource;
