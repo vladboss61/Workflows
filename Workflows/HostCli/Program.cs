@@ -47,23 +47,24 @@ public class Program
                 .UseContentRoot(Directory.GetCurrentDirectory())
                 .UseEnvironment(env)
                 .UseSerilog(Log.Logger)
-                //.UseConsoleLifetime()
+                .UseConsoleLifetime()
                 .ConfigureAppConfiguration(builder =>
                 {
                     // Not required but okey - Clear().
                     builder.Sources.Clear();
                     builder.AddConfiguration(configuration);
                 })
-                .ConfigureServices(async (context, services) =>
+                .ConfigureServices((context, services) =>
                 {
                     Console.WriteLine(context.HostingEnvironment.EnvironmentName);
-                    await new Startup(configuration, Log.Logger).ConfigureServices(services);
+                    //await new Startup(configuration, Log.Logger).ConfigureServices(services);
+                    services.AddHostedService<HostedServiceEx>();
                 })
                 .Build();
 
-            var app = host.Services.GetRequiredService<Application>();
-            await app.RunAsync(cancellationTokenSource.Token);
-
+            //var app = host.Services.GetRequiredService<Application>();
+            //await app.RunAsync(cancellationTokenSource.Token);
+            await host.RunAsync();
             Log.Information("Shutting down application");
         }
         catch (TaskCanceledException taskEx)
