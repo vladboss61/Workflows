@@ -5,21 +5,30 @@ using System.Threading.Tasks;
 
 namespace HostCli;
 
-internal sealed class HostedServiceEx : IHostedService
+internal sealed class HostedServiceEx : BackgroundService
 {
-    public async Task StartAsync(CancellationToken cancellationToken)
+    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
-        while(!cancellationToken.IsCancellationRequested)
+        var random = new Random().Next(0, 300);
+        while (!cancellationToken.IsCancellationRequested)
         {
-            Console.WriteLine("Hosted Service is running...");
-            await Task.Delay(2000);
+            Console.WriteLine($"Hosted Service {random} is running...");
+            await Task.Delay(2000, cancellationToken);
         }
         Console.WriteLine("Finished Loop.");
     }
+}
 
-    public Task StopAsync(CancellationToken cancellationToken)
+internal sealed class HostedServiceEx2 : BackgroundService
+{
+    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
-        Console.WriteLine("Stopped");
-        return Task.CompletedTask;
+        var random = new Random().Next(0, 300);
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            Console.WriteLine($"Hosted Service 2 {random} is running...");
+            await Task.Delay(2000, cancellationToken);
+        }
+        Console.WriteLine("Finished Loop.");
     }
 }

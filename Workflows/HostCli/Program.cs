@@ -57,14 +57,16 @@ public class Program
                 .ConfigureServices((context, services) =>
                 {
                     Console.WriteLine(context.HostingEnvironment.EnvironmentName);
+                    // Other way to process data without HostedServices
                     //await new Startup(configuration, Log.Logger).ConfigureServices(services);
                     services.AddHostedService<HostedServiceEx>();
+                    services.AddHostedService<HostedServiceEx2>();
                 })
                 .Build();
 
             //var app = host.Services.GetRequiredService<Application>();
             //await app.RunAsync(cancellationTokenSource.Token);
-            await host.RunAsync();
+            host.Run();
             Log.Information("Shutting down application");
         }
         catch (TaskCanceledException taskEx)
