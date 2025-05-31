@@ -1,3 +1,5 @@
+using namespace System.Collections.Generic
+
 $ErrorActionPreference = "Stop"
 
 function EnsureSecretsPathExists {
@@ -61,8 +63,16 @@ if (($response.StatusCode -eq 200) -and ($null -ne $response.Content)) {
 
     $jsonResponseBody = $response.Content | ConvertFrom-Json
 
-    $SecretsConfig.Configuration.Login = $jsonResponseBody.Login
-    $SecretsConfig.Configuration.GitHubUserId = $jsonResponseBody.Id
+    $SecretsConfig.Configuration.Login = $jsonResponseBody.login
+    $SecretsConfig.Configuration.GitHubUserId = $jsonResponseBody.id
+    $SecretsConfig.Times = @($jsonResponseBody.created_at, $jsonResponseBody.updated_at)
+
+    #$items = [List[string]]::new()
+    #$items.Add("item1")
+
+    $SecretsConfig.Urls = @();
+    $SecretsConfig.Urls += $jsonResponseBody.url
+    $SecretsConfig.Urls += $jsonResponseBody.html_url
 }
 
 $SecretsDirectory = "$env:APPDATA/Microsoft/UserSecrets/$SecretId"
