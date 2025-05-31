@@ -1,20 +1,26 @@
 $ErrorActionPreference = "Stop"
 
 # This script syncs user secrets from a .csproj file to the user's secrets store.
-Write-Host "Running script: $($MyInvocation.MyCommand.Source)" -ForegroundColor Cyan
+Write-Host "Running script: $($MyInvocation.MyCommand.Source)" -ForegroundColor Green
 
 $Location = Split-Path -Parent $MyInvocation.MyCommand.Path
 $ProjectName = "WorkflowsEx"
-$Csproj = "$Location\..\$ProjectName.csproj"
+$CsprojPath = "$Location\..\$ProjectName.csproj"
 
-Write-Host "Syncing secrets from $Csproj" -ForegroundColor Green
+Write-Host "Syncing secrets from $CsprojPath" -ForegroundColor Green
 
-if (-not (Test-Path -IsValid $Csproj)) {
-    Write-Host "Could not find csproj file at $Csproj" -ForegroundColor Red
+if (-not (Test-Path -IsValid $CsprojPath)) {
+    Write-Host "Could not find csproj file at $CsprojPath" -ForegroundColor Red
+    exit 1
 }
 
-[xml]$CsprojXml = Get-Content $Csproj
-$SecretId = $CsprojXml.Project.PropertyGroup.UserSecretsId
+[xml]$CsprojPathXml = Get-Content $CsprojPath
+$SecretId = $CsprojPathXml.Project.PropertyGroup.UserSecretsId
+
+if ($null -eq $SecretId) {
+    Write-Host "UserSecretsId not found in csproj file." -ForegroundColor Red
+    exit 1
+}
 
 Write-Host "UserSecretsId: $SecretId"
 
@@ -30,8 +36,8 @@ $SecretsConfig.Config.Data2 = "Data2";
 $SecretsConfig.Config.Data3 = @("Data3", "Data4", "Data5");
 
 $SecretsPath = "$env:APPDATA\Microsoft\UserSecrets\$SecretId\secrets.json"
-
 Write-Host "Saving secrets to $SecretsPath"
+
 $json = $SecretsConfig | ConvertTo-Json -Depth 10;
 Set-Content -Path $SecretsPath -Value $json -Encoding UTF8
 
