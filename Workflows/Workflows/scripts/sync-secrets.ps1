@@ -16,7 +16,7 @@ Write-Host "Running script: $($MyInvocation.MyCommand.Source)" -ForegroundColor 
 
 $Location = Split-Path -Parent $MyInvocation.MyCommand.Path
 
-$CsprojFile = Get-ChildItem -Path "$Location\..\*.csproj" -Recurse -File | Select-Object -First 1
+$CsprojFile = Get-ChildItem -Path "$Location/../*.csproj" -Recurse -File | Select-Object -First 1
 
 # $CsprojFile.Name | Split-Path -LeafBase # -- only if you want the base name without extension
 
@@ -56,14 +56,14 @@ $SecretsConfig.Configuration.Data2 = "Data2"
 
 $SecretsConfig.Configuration.Data3 = @("Data3", "Data4", "Data5")
 
-$SecretsDirectory = "$env:APPDATA\Microsoft\UserSecrets\$SecretId"
-$SecretsFilePath = "$SecretsDirectory\secrets.json"
+$SecretsDirectory = "$env:APPDATA/Microsoft/UserSecrets/$SecretId"
+$SecretsFilePath = "$SecretsDirectory/secrets.json"
 
 EnsureSecretsPathExists -SecretsFilePath $SecretsFilePath
 
 Write-Host "Saving secrets to $SecretsFilePath"
 
-$json = $SecretsConfig | ConvertTo-Json -Depth 10;
+$json = $SecretsConfig | ConvertTo-Json -Depth 10
 Set-Content -Path $SecretsFilePath -Value $json -Encoding UTF8
 
 Write-Host "Secrets synced successfully." -ForegroundColor Green
