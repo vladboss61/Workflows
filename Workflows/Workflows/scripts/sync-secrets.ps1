@@ -2,7 +2,7 @@ $ErrorActionPreference = "Stop"
 
 function EnsureSecretsPathExists {
     param (
-         [Parameter(Mandatory=$true)]$SecretsFilePath
+         [Parameter(Mandatory=$True)]$SecretsFilePath
     )
 
     if (-not (Test-Path -Path $SecretsFilePath)) {
@@ -39,7 +39,7 @@ if ($null -eq $SecretId) {
     return
 }
 
-Write-Host "UserSecretsId: $SecretId"
+Write-Host "User secrets id: $SecretId"
 
 # Ordered dictionary to maintain the order of keys in resulting JSON
 $SecretsConfig = [Ordered]@{}
@@ -48,7 +48,7 @@ $SecretsConfig.Version = "1.0.0"
 
 $SecretsConfig.Metadata = @{}
 $SecretsConfig.Metadata.UserSecretsId = $SecretId
-$SecretsConfig.Metadata.CsprojFileName = $ProjectName 
+$SecretsConfig.Metadata.CsprojFileName = $ProjectName
 
 $SecretsConfig.Configuration = @{}
 $SecretsConfig.Configuration.Data1 = "Data1"
