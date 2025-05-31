@@ -15,8 +15,8 @@ function EnsureSecretsPathExists {
 Write-Host "Running script: $($MyInvocation.MyCommand.Source)" -ForegroundColor Green
 
 $Location = Split-Path -Parent $MyInvocation.MyCommand.Path
-
 $CsprojFile = Get-ChildItem -Path "$Location/../*.csproj" -Recurse -File | Select-Object -First 1
+$GitUrl = "https://api.github.com"
 
 # $CsprojFile.Name | Split-Path -LeafBase # -- only if you want the base name without extension
 
@@ -51,10 +51,19 @@ $SecretsConfig.Metadata.UserSecretsId = $SecretId
 $SecretsConfig.Metadata.CsprojFileName = $ProjectName
 
 $SecretsConfig.Configuration = @{}
-$SecretsConfig.Configuration.Data1 = "Data1"
-$SecretsConfig.Configuration.Data2 = "Data2"
 
 $SecretsConfig.Configuration.Data3 = @("Data3", "Data4", "Data5")
+
+$response = Invoke-WebRequest -Uri "$GitUrl/users/vladboss61" -Method Get -Headers @{ "User-Agent" = "PowerShell" }
+
+if (($response.StatusCode -eq 200) -and ($null -ne $response.Content)) {
+    Write-Host "Successfully fetched user data from GitHub API." -ForegroundColor Green
+
+    $jsonResponseBody = $response.Content | ConvertFrom-Json
+
+    $SecretsConfig.Configuration.Login = $jsonResponseBody.Login
+    $SecretsConfig.Configuration.GitHubUserId = $jsonResponseBody.Id
+}
 
 $SecretsDirectory = "$env:APPDATA/Microsoft/UserSecrets/$SecretId"
 $SecretsFilePath = "$SecretsDirectory/secrets.json"
