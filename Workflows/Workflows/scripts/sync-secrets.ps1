@@ -1,19 +1,6 @@
 $ErrorActionPreference = "Stop"
 
 function EnsureSecretsPathExists {
-    <#
-    .SYNOPSIS
-    Ensures that the directory for the secrets file exists.
-
-    .DESCRIPTION
-    This function ensures that the directory for the secrets file exists.
-
-    .PARAMETER SecretsFilePath
-    The full path to the secrets file.
-
-    .EXAMPLE
-    EnsureSecretsPathExists -SecretsFilePath "C:\Path\To\Your\Secrets.json"
-    #>
     param (
          [Parameter(Mandatory=$true)]$SecretsFilePath
     )
@@ -28,8 +15,13 @@ function EnsureSecretsPathExists {
 Write-Host "Running script: $($MyInvocation.MyCommand.Source)" -ForegroundColor Green
 
 $Location = Split-Path -Parent $MyInvocation.MyCommand.Path
-$ProjectName = "WorkflowsEx"
-$CsprojPath = "$Location\..\$ProjectName.csproj"
+
+$CsprojFile = Get-ChildItem -Path "$Location\..\*.csproj" -Recurse -File | Select-Object -First 1
+
+# $CsprojFile.Name | Split-Path -LeafBase # -- only if you want the base name without extension
+
+$ProjectName = $CsprojFile.Name
+$CsprojPath = $CsprojFile.FullName
 
 Write-Host "Syncing secrets from $CsprojPath" -ForegroundColor Green
 
@@ -38,7 +30,8 @@ if (-not (Test-Path $CsprojPath)) {
     return
 }
 
-[xml]$CsprojPathXml = Get-Content $CsprojPath
+[Xml]$CsprojPathXml = Get-Content $CsprojPath
+
 $SecretId = $CsprojPathXml.Project.PropertyGroup.UserSecretsId
 
 if ($null -eq $SecretId) {
@@ -48,16 +41,20 @@ if ($null -eq $SecretId) {
 
 Write-Host "UserSecretsId: $SecretId"
 
-$SecretsConfig = @{};
+# Ordered dictionary to maintain the order of keys in resulting JSON
+$SecretsConfig = [Ordered]@{}
 
-$SecretsConfig.UserSecretsId = $SecretId;
-$SecretsConfig.CsprojFileName = "$ProjectName";
+$SecretsConfig.Version = "1.0.0"
 
-$SecretsConfig.Config = @{};
-$SecretsConfig.Config.Data1 = "Data1";
-$SecretsConfig.Config.Data2 = "Data2";
+$SecretsConfig.Metadata = @{}
+$SecretsConfig.Metadata.UserSecretsId = $SecretId
+$SecretsConfig.Metadata.CsprojFileName = $ProjectName 
 
-$SecretsConfig.Config.Data3 = @("Data3", "Data4", "Data5");
+$SecretsConfig.Configuration = @{}
+$SecretsConfig.Configuration.Data1 = "Data1"
+$SecretsConfig.Configuration.Data2 = "Data2"
+
+$SecretsConfig.Configuration.Data3 = @("Data3", "Data4", "Data5")
 
 $SecretsDirectory = "$env:APPDATA\Microsoft\UserSecrets\$SecretId"
 $SecretsFilePath = "$SecretsDirectory\secrets.json"
