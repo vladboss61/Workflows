@@ -17,6 +17,10 @@ function EnsureSecretsPathExists {
 Write-Host "Running script: $($MyInvocation.MyCommand.Source)" -ForegroundColor Green
 
 $Location = Split-Path -Parent $MyInvocation.MyCommand.Path
+
+
+#$projectName = (Get-ChildItem "../*.csproj").Basename
+
 $CsprojFile = Get-ChildItem -Path "$Location/../*.csproj" -Recurse -File | Select-Object -First 1
 $GitUrl = "https://api.github.com"
 
