@@ -29,7 +29,7 @@ public class ServiceB : IServiceB
 
 }
 
-internal class Program
+internal sealed class Program
 {
     public static void Main(string[] args)
     {
@@ -40,6 +40,9 @@ internal class Program
         var serviceProvider = serviceCollection.BuildServiceProvider(
             new ServiceProviderOptions
             {
+                // During BuildServiceProvider call, the ValidateOnBuild = true ensures that the service provider is validated at build time.
+                // And get errors immediately if there are any issues with the service registrations. Comment out the line below to see the difference.
+                // And comment serviceCollection.AddScoped<IServiceB, ServiceB>(); and add IServiceB to ServiceA constructor to see the error.
                 //ValidateOnBuild = true,
                 ValidateScopes = true
             });
