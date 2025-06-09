@@ -8,6 +8,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Data.Common;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace WebAppEF.AdventureS.Controllers;
@@ -22,6 +23,8 @@ public class WorkOrderRouting
     public DateTime ActualStartDate { get; set; }
     public DateTime ActualEndDate { get; set; }
     public decimal ActualResourceHrs { get; set; }
+
+    public string TotalCount { get; set; }
 }
 
 public class DbWorkOrderRoutingParams
@@ -37,7 +40,6 @@ public class WorkOrderRoutingRequestParams
 {
     public required int[] IDs { get; set; }
 
-    [RegularExpression("WorkOrderID|ProductID|LocationID|ScheduledStartDate|OperationSequence")]
     public string SortField { get; set; } = "OperationSequence";
 
     [RegularExpression("ASC|DESC")]
@@ -52,7 +54,7 @@ public class WorkOrderRoutingRequestParams
 
 public class PagedResult<T>
 {
-    public ICollection<T> Items { get; set; }
+    public IEnumerable<T> Items { get; set; }
 
     public int TotalCount { get; set; }
 
@@ -78,13 +80,25 @@ public class WorkOrdersController : ControllerBase
     [HttpPost("work-order-routings")]
     public async Task<PagedResult<WorkOrderRouting>> GetWorkOrderRoutingsAsync([FromBody] WorkOrderRoutingRequestParams workOrderRoutingRequestParams)
     {
+        var s = typeof(WorkOrderRouting).GetProperties(BindingFlags.Instance | BindingFlags.Public);
+
+        string[] availableFilteredProperties = s.Select(x => x.Name).ToArray();
+
+        bool allowSort = availableFilteredProperties.Any(x => string.Equals(workOrderRoutingRequestParams.SortField, x));
+
+        if (!allowSort)
+        {
+            throw new InvalidOperationException("Bad sort parameter");
+        }
+
         var sql = $"""
                 SELECT
                     WorkOrderID,
                     ProductID,
                     LocationID,
                     ScheduledStartDate,
-                    OperationSequence
+                    OperationSequence,
+                    COUNT(*) OVER() AS TotalCount
                 FROM Production.WorkOrderRouting
                 WHERE OperationSequence IN @IDs
                 ORDER BY {workOrderRoutingRequestParams.SortField} {workOrderRoutingRequestParams.SortOrder}
@@ -100,19 +114,9 @@ public class WorkOrdersController : ControllerBase
             PageSize = workOrderRoutingRequestParams.PageSize
         };
 
-        IDbTransaction transaction = _dbConnection.BeginTransaction(IsolationLevel.ReadUncommitted);
-
-        try
-        {
-            transaction.Commit();
-        }
-        catch (Exception)
-        {
-            transaction.Rollback();
-        }
-
         SqlMapper.GridReader reader = await _dbConnection.QueryMultipleAsync(sql, workOrderRoutingParams);
-        var workOrderRoutings = reader.Read<WorkOrderRouting>().ToList();
+
+        IEnumerable<WorkOrderRouting> workOrderRoutings = reader.Read<WorkOrderRouting>();
         int totalCount = reader.ReadFirst<int>();
 
         return new PagedResult<WorkOrderRouting>
