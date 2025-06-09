@@ -7,7 +7,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using System.Data;
+using System.Text.Json.Serialization;
+using System.Text.Json;
 using WebAppEF.AdventureS.Infrastructure;
+using WebAppEF.AdventureS.Interfaces;
+using WebAppEF.AdventureS.Services;
+using System;
 
 namespace WebAppEF.AdventureS;
 
@@ -31,7 +36,21 @@ public class Program
             return new SqlConnection(connectionString);
         });
 
-        builder.Services.AddControllers();
+
+        builder.Services.AddScoped<IWorkOrderRepository, WorkOrderRepository>();
+
+        builder.Services.AddControllers().AddJsonOptions(options =>
+        {
+            options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+            options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+            options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+            options.JsonSerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
+            options.JsonSerializerOptions.ReadCommentHandling = JsonCommentHandling.Skip;
+            options.JsonSerializerOptions.Converters.Clear();
+            options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+        });
+
+
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
