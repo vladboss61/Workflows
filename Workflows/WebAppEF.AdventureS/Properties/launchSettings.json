@@ -3,11 +3,11 @@
     "http": {
       "commandName": "Project",
       "dotnetRunMessages": true,
-      "launchBrowser": false,
       "applicationUrl": "http://localhost:5207",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "DefaultConnection": "Server=localhost;Database=AdventureWorks2019;User Id=sa;Password=admin; TrustServerCertificate=True;"
+        "ConfigurationOptions__ConnectionString": "Server=localhost;Database=AdventureWorks2019;User Id=sa;Password=admin; TrustServerCertificate=True;"
+      }
       }
     },
     "https": {

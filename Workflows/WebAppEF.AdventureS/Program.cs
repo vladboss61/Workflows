@@ -1,8 +1,13 @@
 
 
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using System.Data;
+using WebAppEF.AdventureS.Infrastructure;
 
 namespace WebAppEF.AdventureS;
 
@@ -17,12 +22,12 @@ public class Program
             .AddJsonFile("appsettings.Development.json", optional: false, reloadOnChange: true)
             .AddEnvironmentVariables();
 
-        builder.Services.Configure<ConnectionStrings>(builder.Configuration);
+        builder.Services.Configure<ConfigurationOptions>(builder.Configuration.GetSection(nameof(ConfigurationOptions)));
 
         builder.Services.AddScoped<IDbConnection>(sp =>
         {
-            var config = sp.GetRequiredService<IOptions<ConnectionStrings>>();
-            var connectionString = config.Value.DefaultConnection;
+            var config = sp.GetRequiredService<IOptions<ConfigurationOptions>>();
+            var connectionString = config.Value.ConnectionString;
             return new SqlConnection(connectionString);
         });
 

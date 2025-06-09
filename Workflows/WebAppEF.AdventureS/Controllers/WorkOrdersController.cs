@@ -1,10 +1,14 @@
 using Dapper;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Data.Common;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace WebAppEF.AdventureS.Controllers;
 public class WorkOrderRouting
@@ -62,22 +66,17 @@ public class PagedResult<T>
 [Route("work-order")]
 public class WorkOrdersController : ControllerBase
 {
-    private readonly ConnectionStrings _options;
     private readonly ILogger<WorkOrdersController> _logger;
-    public readonly IDbConnection _dbConnection;
+    private readonly IDbConnection _dbConnection;
 
-    public WorkOrdersController(
-        IDbConnection dbConnection,
-        IOptions<ConnectionStrings> options,
-        ILogger<WorkOrdersController> logger)
+    public WorkOrdersController(IDbConnection dbConnection, ILogger<WorkOrdersController> logger)
     {
         _dbConnection = dbConnection;
-        _options = options.Value;
         _logger = logger;
     }
 
     [HttpPost("work-order-routings")]
-    public PagedResult<WorkOrderRouting> GetWorkOrderRoutings([FromBody] WorkOrderRoutingRequestParams workOrderRoutingRequestParams)
+    public async Task<PagedResult<WorkOrderRouting>> GetWorkOrderRoutingsAsync([FromBody] WorkOrderRoutingRequestParams workOrderRoutingRequestParams)
     {
         var sql = $"""
                 SELECT
@@ -101,8 +100,18 @@ public class WorkOrdersController : ControllerBase
             PageSize = workOrderRoutingRequestParams.PageSize
         };
 
-        SqlMapper.GridReader reader = _dbConnection.QueryMultiple(sql, workOrderRoutingParams);
+        IDbTransaction transaction = _dbConnection.BeginTransaction(IsolationLevel.ReadUncommitted);
 
+        try
+        {
+            transaction.Commit();
+        }
+        catch (Exception)
+        {
+            transaction.Rollback();
+        }
+
+        SqlMapper.GridReader reader = await _dbConnection.QueryMultipleAsync(sql, workOrderRoutingParams);
         var workOrderRoutings = reader.Read<WorkOrderRouting>().ToList();
         int totalCount = reader.ReadFirst<int>();
 
