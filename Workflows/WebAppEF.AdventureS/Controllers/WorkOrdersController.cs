@@ -1,16 +1,8 @@
-using Dapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
 using WebAppEF.AdventureS.Interfaces;
 using WebAppEF.AdventureS.Models;
-using WebAppEF.AdventureS.Models.Filters;
 
 namespace WebAppEF.AdventureS.Controllers;
 
