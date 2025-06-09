@@ -1,0 +1,6 @@
+@WebAppEF.AdventureS_HostAddress = http://localhost:5207
+
+GET {{WebAppEF.AdventureS_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

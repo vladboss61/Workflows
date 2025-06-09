@@ -9,7 +9,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HostCli", "HostCli\HostCli.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dependency.ConsoleApp", "Dependency.ConsoleApp\Dependency.ConsoleApp.csproj", "{A6CAFD44-7A55-4CEB-A1E6-5B9A2A2AF9FF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DockerContainersTests", "DockerContainersTests\DockerContainersTests.csproj", "{B55DBB67-EA3C-4A68-902E-1596F89CB94A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DockerContainersTests", "DockerContainersTests\DockerContainersTests.csproj", "{B55DBB67-EA3C-4A68-902E-1596F89CB94A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebAppEF.AdventureS", "WebAppEF.AdventureS\WebAppEF.AdventureS.csproj", "{C01DBDE8-E682-4DC8-B237-29FB4CF47C53}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{B55DBB67-EA3C-4A68-902E-1596F89CB94A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B55DBB67-EA3C-4A68-902E-1596F89CB94A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B55DBB67-EA3C-4A68-902E-1596F89CB94A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C01DBDE8-E682-4DC8-B237-29FB4CF47C53}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C01DBDE8-E682-4DC8-B237-29FB4CF47C53}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C01DBDE8-E682-4DC8-B237-29FB4CF47C53}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C01DBDE8-E682-4DC8-B237-29FB4CF47C53}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

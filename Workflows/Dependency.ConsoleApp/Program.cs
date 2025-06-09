@@ -1,5 +1,9 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Azure;
+using Dapper;
+using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.DependencyInjection;
 using System;
+using System.Linq;
 
 namespace Dependency.ConsoleApp;
 
