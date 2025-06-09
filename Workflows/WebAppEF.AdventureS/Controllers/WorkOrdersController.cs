@@ -1,17 +1,17 @@
 using Dapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
-using System.Data.Common;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace WebAppEF.AdventureS.Controllers;
+
 public class WorkOrderRouting
 {
     public int WorkOrderID { get; set; }
@@ -23,12 +23,17 @@ public class WorkOrderRouting
     public DateTime ActualStartDate { get; set; }
     public DateTime ActualEndDate { get; set; }
     public decimal ActualResourceHrs { get; set; }
-
-    public string TotalCount { get; set; }
+    public decimal ActualCost { get; set; }
+    public decimal PlannedCost { get; set; }
+    public int TotalCount { get; set; }
 }
 
 public class DbWorkOrderRoutingParams
 {
+    public double? PlannedCost { get; set; }
+
+    public double? ActualCost { get; set; }
+
     public int[] IDs { get; set; }
 
     public int Offset { get; set; }
@@ -36,14 +41,29 @@ public class DbWorkOrderRoutingParams
     public int PageSize { get; set; } = 10; // Default page size
 }
 
+public enum Order
+{
+    Asc,
+    Desc
+}
+
+public class WorkOrderRoutingFilter
+{
+    public int[] IDs { get; set; } = [];
+
+    public double PlannedCost { get; set; } = 0.0;
+
+    public double ActualCost { get; set; } = 0.0;
+}
+
 public class WorkOrderRoutingRequestParams
 {
-    public required int[] IDs { get; set; }
+    public WorkOrderRoutingFilter Filter { get; set; }
 
     public string SortField { get; set; } = "OperationSequence";
 
-    [RegularExpression("ASC|DESC")]
-    public string SortOrder { get; set; } = "ASC"; // Default sort order, can be "ASC" or "DESC"
+    [RegularExpression($"{nameof(Order.Asc)}|{nameof(Order.Desc)}")]
+    public Order SortOrder { get; set; } = Order.Desc; // Default sort order, can be "ASC" or "DESC"
 
     [Range(1, int.MaxValue)]
     public int PageIndex { get; set; } = 1;
@@ -80,15 +100,44 @@ public class WorkOrdersController : ControllerBase
     [HttpPost("work-order-routings")]
     public async Task<PagedResult<WorkOrderRouting>> GetWorkOrderRoutingsAsync([FromBody] WorkOrderRoutingRequestParams workOrderRoutingRequestParams)
     {
-        var s = typeof(WorkOrderRouting).GetProperties(BindingFlags.Instance | BindingFlags.Public);
+        var propertiesInfo = typeof(WorkOrderRouting).GetProperties(BindingFlags.Instance | BindingFlags.Public);
 
-        string[] availableFilteredProperties = s.Select(x => x.Name).ToArray();
+        string[] availableSortedProperties = propertiesInfo.Select(x => x.Name).ToArray();
 
-        bool allowSort = availableFilteredProperties.Any(x => string.Equals(workOrderRoutingRequestParams.SortField, x));
+        bool allowSort = availableSortedProperties.Any(x => string.Equals(workOrderRoutingRequestParams.SortField, x));
 
         if (!allowSort)
         {
             throw new InvalidOperationException("Bad sort parameter");
+        }
+
+        var stringBuilder = new StringBuilder("WHERE 1=1");
+
+        var workOrderRoutingParams = new DbWorkOrderRoutingParams
+        {
+            Offset = (workOrderRoutingRequestParams.PageIndex - 1) * workOrderRoutingRequestParams.PageSize,
+            PageSize = workOrderRoutingRequestParams.PageSize
+        };
+
+        if (workOrderRoutingRequestParams.Filter != null)
+        {
+            if (workOrderRoutingRequestParams.Filter.IDs?.Length > 0)
+            {
+                workOrderRoutingParams.IDs = workOrderRoutingRequestParams.Filter.IDs;
+                stringBuilder.Append(" AND OperationSequence IN @IDs");
+            }
+
+            if (workOrderRoutingRequestParams.Filter.PlannedCost > 0.0)
+            {
+                workOrderRoutingParams.PlannedCost = workOrderRoutingRequestParams.Filter.PlannedCost;
+                stringBuilder.Append(" AND PlannedCost >= @PlannedCost");
+            }
+
+            if (workOrderRoutingRequestParams.Filter.ActualCost > 0.0)
+            {
+                workOrderRoutingParams.ActualCost = workOrderRoutingRequestParams.Filter.ActualCost;
+                stringBuilder.Append(" AND ActualCost >= @ActualCost");
+            }
         }
 
         var sql = $"""
@@ -98,21 +147,16 @@ public class WorkOrdersController : ControllerBase
                     LocationID,
                     ScheduledStartDate,
                     OperationSequence,
+                    ActualCost,
+                    PlannedCost,
                     COUNT(*) OVER() AS TotalCount
                 FROM Production.WorkOrderRouting
-                WHERE OperationSequence IN @IDs
-                ORDER BY {workOrderRoutingRequestParams.SortField} {workOrderRoutingRequestParams.SortOrder}
+                {stringBuilder}
+                ORDER BY {workOrderRoutingRequestParams.SortField} {workOrderRoutingRequestParams.SortOrder.ToString().ToUpper()}
                 OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
 
-                SELECT COUNT(*) FROM Production.WorkOrderRouting WHERE OperationSequence IN @IDs;
+                SELECT COUNT(*) FROM Production.WorkOrderRouting {stringBuilder};
             """;
-
-        var workOrderRoutingParams = new DbWorkOrderRoutingParams
-        {
-            IDs = workOrderRoutingRequestParams.IDs,
-            Offset = (workOrderRoutingRequestParams.PageIndex - 1) * workOrderRoutingRequestParams.PageSize,
-            PageSize = workOrderRoutingRequestParams.PageSize
-        };
 
         SqlMapper.GridReader reader = await _dbConnection.QueryMultipleAsync(sql, workOrderRoutingParams);
 
