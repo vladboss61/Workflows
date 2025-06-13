@@ -6,7 +6,8 @@
       "applicationUrl": "http://localhost:5207",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "ConfigurationOptions__ConnectionString": "Server=localhost;Database=AdventureWorks2019;User Id=sa;Password=admin; TrustServerCertificate=True;"
+        "ConfigurationOptions__ConnectionString": "Server=localhost;Database=AdventureWorks2019;User Id=sa;Password=admin; TrustServerCertificate=True;",
+        "DefaultConnection": "Server=localhost;Database=Application;User Id=sa;Password=admin; TrustServerCertificate=True;"
       }
       }
     },

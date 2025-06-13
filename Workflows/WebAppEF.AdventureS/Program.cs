@@ -13,6 +13,8 @@ using WebAppEF.AdventureS.Infrastructure;
 using WebAppEF.AdventureS.Interfaces;
 using WebAppEF.AdventureS.Services;
 using System;
+using Microsoft.EntityFrameworkCore;
+using WebAppEF.AdventureS.Ef;
 
 namespace WebAppEF.AdventureS;
 
@@ -28,6 +30,10 @@ public class Program
             .AddEnvironmentVariables();
 
         builder.Services.Configure<ConfigurationOptions>(builder.Configuration.GetSection(nameof(ConfigurationOptions)));
+
+        builder.Services.AddDbContext<ApplicationDbContext>(
+            x => x.UseSqlServer(builder.Configuration["DefaultConnection"]));
+
 
         builder.Services.AddScoped<IDbConnection>(sp =>
         {
@@ -46,7 +52,6 @@ public class Program
             options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
             options.JsonSerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
             options.JsonSerializerOptions.ReadCommentHandling = JsonCommentHandling.Skip;
-            options.JsonSerializerOptions.Converters.Clear();
             options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
         });
 

@@ -21,11 +21,10 @@ public class WorkOrderRepository : IWorkOrderRepository
         _dbConnection = dbConnection;
     }
 
-    public async Task<PagedResult<WorkOrderRouting>> GetWorkOrderRoutingsAsync(WorkOrderRoutingRequestParams workOrderRoutingRequestParams)
+    public async Task<PagedResult<WorkOrderRouting>> GetWorkOrderRoutingsAsync(WorkOrderRoutingRequestParams
+        workOrderRoutingRequestParams)
     {
-        var propertiesInfo = typeof(WorkOrderRouting).GetProperties(BindingFlags.Instance | BindingFlags.Public);
-
-        string[] availableSortedProperties = propertiesInfo.Select(x => x.Name).ToArray();
+        string[] availableSortedProperties = typeof(WorkOrderRouting).GetProperties(BindingFlags.Instance | BindingFlags.Public).Select(x => x.Name).ToArray();
 
         bool allowSort = availableSortedProperties.Any(x => string.Equals(workOrderRoutingRequestParams.SortField, x));
 
@@ -34,7 +33,7 @@ public class WorkOrderRepository : IWorkOrderRepository
             throw new InvalidOperationException("Bad sort parameter");
         }
 
-        var filterBuilder = new StringBuilder("WHERE 1=1");
+        var filterBuilder = new StringBuilder("WHERE 1 = 1");
 
         var workOrderRoutingParams = new DbWorkOrderRoutingParams
         {
@@ -65,7 +64,6 @@ public class WorkOrderRepository : IWorkOrderRepository
         SqlMapper.GridReader reader = await _dbConnection.QueryMultipleAsync(sql, workOrderRoutingParams);
 
         IEnumerable<WorkOrderRouting> workOrderRoutings = reader.Read<WorkOrderRouting>();
-
         int totalCount = reader.ReadFirst<int>();
 
         return new PagedResult<WorkOrderRouting>
