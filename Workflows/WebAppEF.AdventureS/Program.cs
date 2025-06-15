@@ -15,6 +15,7 @@ using WebAppEF.AdventureS.Services;
 using System;
 using Microsoft.EntityFrameworkCore;
 using WebAppEF.AdventureS.Ef;
+using WebAppEF.AdventureS.Controllers;
 
 namespace WebAppEF.AdventureS;
 
@@ -34,6 +35,7 @@ public class Program
         builder.Services.AddDbContext<ApplicationDbContext>(
             x => x.UseSqlServer(builder.Configuration["DefaultConnection"]));
 
+        builder.Services.AddScoped<ITransactionalDbContext, DefaultTransactionDbContext>();
 
         builder.Services.AddScoped<IDbConnection>(sp =>
         {

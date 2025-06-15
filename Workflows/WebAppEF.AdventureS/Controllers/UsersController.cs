@@ -10,15 +10,52 @@ using WebAppEF.AdventureS.Ef;
 
 namespace WebAppEF.AdventureS.Controllers;
 
+public interface ITransactionalDbContext
+{
+    Task ExecuteAsync(Func<ApplicationDbContext, Task> action);
+}
+
+public class DefaultTransactionDbContext : ITransactionalDbContext
+{
+    private readonly ApplicationDbContext _context;
+
+    public DefaultTransactionDbContext(ApplicationDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task ExecuteAsync(Func<ApplicationDbContext, Task> action)
+    {
+        using IDbContextTransaction transaction = await _context.Database.BeginTransactionAsync();
+        try
+        {
+            await action(_context);
+            await transaction.CommitAsync();
+        }
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
+    }
+}
+
 public class UsersController : ControllerBase
 {
     private readonly ApplicationDbContext _applicationDbContext;
+    private readonly ITransactionalDbContext _transactionalDbContext;
     private readonly ILogger<UsersController> _logger;
 
-    public UsersController(ApplicationDbContext applicationDbContext, ILogger<UsersController> logger)
+    public UsersController(ITransactionalDbContext transactionalDbContext, ApplicationDbContext applicationDbContex, ILogger<UsersController> logger)
     {
-        _applicationDbContext = applicationDbContext;
+        _applicationDbContext = applicationDbContex;
+        _transactionalDbContext = transactionalDbContext;
         _logger = logger;
+    }
+
+    private Func<ApplicationDbContext, Task> HandleAddUserAsync(User user)
+    {
+        return Task (ApplicationDbContext context) => context.Users.AddAsync(user).AsTask();
     }
 
     [HttpPost("users")]
@@ -33,6 +70,8 @@ public class UsersController : ControllerBase
         };
 
         await _applicationDbContext.ExecuteAsync(async () => await _applicationDbContext.Users.AddAsync(user));
+        
+        //await _transactionalDbContext.ExecuteAsync(HandleAddUserAsync(user));
 
         var defaultUserType = _applicationDbContext.UserTypes.FirstOrDefault(x => x.UserTypeName == "Default Type");
 
