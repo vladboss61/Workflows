@@ -20,7 +20,38 @@ public class User
     public int? RoleId { get; set; }
 
     public Role Role { get; set; }
+
+    public byte[] RowVersion { get; set; }
+
+    public ICollection<UserTypeMapping> UserTypeMappings { get; set; }
 }
+
+
+public class UserType
+{
+    public int Id { get; set; }
+
+    public string UserTypeName { get; set; }
+
+    public string UserTypeDescription { get; set; }
+
+    public ICollection<UserTypeMapping> UserTypeMappings { get; set; }
+
+}
+
+public class UserTypeMapping
+{
+    public int UserId { get; set; }
+
+    public User User { get; set; }
+
+    public int UserTypeId { get; set; }
+
+    public UserType UserType { get; set; }
+
+    public string CreatedBy { get; set; }
+}
+
 
 public class Role
 {
@@ -64,6 +95,10 @@ public sealed class ApplicationDbContext : DbContext
 
     public DbSet<RoleTypes> RoleTypes { get; set; }
 
+    public DbSet<UserType> UserTypes { get; set; }
+
+    public DbSet<UserTypeMapping> UserTypeMappings { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<User>().ToTable("User", "mad");
@@ -93,6 +128,10 @@ public sealed class ApplicationDbContext : DbContext
             .Property(x => x.RoleId)
             .IsRequired(false);
 
+        modelBuilder.Entity<User>()
+            .Property(x => x.RowVersion)
+            .IsRowVersion();
+
         modelBuilder.Entity<RoleTypes>()
             .Property(x => x.Id)
             .ValueGeneratedNever();
@@ -114,26 +153,52 @@ public sealed class ApplicationDbContext : DbContext
                  RoleDescription = "Administrator with full access to the system."
             },
              new RoleTypes
-            {
+             {
                  Id = 2,
                  RoleType = RoleType.Developer,
                  RoleName = "Developer",
                  RoleDescription = "Developer with access to development tools and resources."
-            },
+             },
              new RoleTypes
-                {
-                    Id = 3,
-                    RoleType = RoleType.Manager,
-                    RoleName = "Manager",
-                    RoleDescription = "Manager with access to management tools and resources."
-                },
+             {
+                Id = 3,
+                RoleType = RoleType.Manager,
+                RoleName = "Manager",
+                RoleDescription = "Manager with access to management tools and resources."
+             },
             new RoleTypes
-                {
-                    Id = 4,
-                    RoleType = RoleType.Tester,
-                    RoleName = "Tester",
-                    RoleDescription = "Tester with acces to some internal resources."
-                }
+            {
+                Id = 4,
+                RoleType = RoleType.Tester,
+                RoleName = "Tester",
+                RoleDescription = "Tester with acces to some internal resources."
+            }
             ]);
+
+        modelBuilder.Entity<UserType>().ToTable("UserType", "mad");
+        
+        modelBuilder.Entity<UserType>()
+            .HasKey(x => x.Id);
+
+        modelBuilder.Entity<UserType>().Property(x => x.UserTypeName)
+            .HasMaxLength(100)
+            .IsRequired();
+
+        modelBuilder.Entity<UserTypeMapping>().ToTable("UserTypeMapping", "mad");
+
+        modelBuilder.Entity<UserTypeMapping>()
+            .HasOne(x => x.User)
+            .WithMany(x => x.UserTypeMappings);
+
+        modelBuilder.Entity<UserTypeMapping>()
+            .HasOne(x => x.UserType)
+            .WithMany(x => x.UserTypeMappings);
+
+        modelBuilder.Entity<UserTypeMapping>()
+            .HasKey(x => new { x.UserId, x.UserTypeId });
+
+        modelBuilder.Entity<UserTypeMapping>().Property(x => x.CreatedBy)
+            .HasMaxLength(150)
+            .IsRequired(true);
     }
 }

@@ -24,6 +24,7 @@ public class UsersController : ControllerBase
     [HttpPost("users")]
     public async Task<IActionResult> CreateUserAsync([FromBody] UserRequest userRequest)
     {
+        var userTypes = _applicationDbContext.Users.Include(x => x.UserTypeMappings).SelectMany(x => x.UserTypeMappings).Where(x => x.CreatedBy == "Creator").ToQueryString();
         var user = new User
         {
             UserGuid = Guid.NewGuid().ToString(),
@@ -32,6 +33,26 @@ public class UsersController : ControllerBase
         };
 
         await _applicationDbContext.ExecuteAsync(async () => await _applicationDbContext.Users.AddAsync(user));
+
+        var defaultUserType = _applicationDbContext.UserTypes.FirstOrDefault(x => x.UserTypeName == "Default Type");
+
+        if (defaultUserType is null)
+        {
+            defaultUserType = new UserType
+            {
+                UserTypeName = "Default Type", // Assuming a default UserTypeName for demonstration
+                UserTypeDescription = "Default user type description" // Assuming a default description for demonstration
+            };
+
+            await _applicationDbContext.ExecuteAsync(async () => await _applicationDbContext.UserTypes.AddAsync(defaultUserType));
+        }
+
+        await _applicationDbContext.ExecuteAsync(async () => await _applicationDbContext.UserTypeMappings.AddAsync(new UserTypeMapping
+        {
+            UserId = user.Id,
+            UserTypeId = defaultUserType.Id,
+            CreatedBy = userRequest.CreatedBy
+        }));
 
         var userResponse = new UserResponse { Id = user.Id, UserGuid = user.UserGuid };
         return Ok(userResponse);
@@ -105,6 +126,8 @@ public class UsersController : ControllerBase
     public class UserRequest
     {
         public string Name { get; set; }
+
+        public string CreatedBy { get; set; }
     }
 
     public class RoleResponse
