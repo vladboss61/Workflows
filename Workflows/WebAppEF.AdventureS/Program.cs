@@ -16,6 +16,9 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using WebAppEF.AdventureS.Ef;
 using WebAppEF.AdventureS.Controllers;
+using System.Linq;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 
 namespace WebAppEF.AdventureS;
 
@@ -44,6 +47,7 @@ public class Program
             return new SqlConnection(connectionString);
         });
 
+        builder.Services.AddHealthChecks();
 
         builder.Services.AddScoped<IWorkOrderRepository, WorkOrderRepository>();
 
@@ -64,6 +68,20 @@ public class Program
 
         var app = builder.Build();
 
+        app.UseHealthChecks("/health", new HealthCheckOptions
+        {
+            Predicate = _ => true,
+            ResponseWriter = async (context, report) =>
+            {
+                context.Response.ContentType = "application/json";
+                var result = JsonSerializer.Serialize(new
+                {
+                    status = report.Status.ToString(),
+                    checks = report.Entries.Select(e => new { key = e.Key, value = e.Value.Status.ToString() })
+                });
+                await context.Response.WriteAsync(result);
+            }
+        });
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
         {
@@ -74,7 +92,6 @@ public class Program
         app.UseHttpsRedirection();
 
         app.UseAuthorization();
-
 
         app.MapControllers();
 

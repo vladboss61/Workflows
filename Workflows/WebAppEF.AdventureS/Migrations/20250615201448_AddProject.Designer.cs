@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WebAppEF.AdventureS.Ef;
 
@@ -11,9 +12,11 @@ using WebAppEF.AdventureS.Ef;
 namespace WebAppEF.AdventureS.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250615201448_AddProject")]
+    partial class AddProject
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -64,9 +67,6 @@ namespace WebAppEF.AdventureS.Migrations
                     b.Property<int>("Id")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
-
                     b.Property<string>("RoleDescription")
                         .HasMaxLength(1500)
                         .HasColumnType("nvarchar(1500)");
@@ -79,9 +79,6 @@ namespace WebAppEF.AdventureS.Migrations
                     b.Property<int>("RoleType")
                         .HasColumnType("int");
 
-                    b.Property<DateTime?>("UpdatedDate")
-                        .HasColumnType("datetime2");
-
                     b.HasKey("Id");
 
                     b.ToTable("RoleTypes", "mad");
@@ -90,7 +87,6 @@ namespace WebAppEF.AdventureS.Migrations
                         new
                         {
                             Id = 1,
-                            CreatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             RoleDescription = "Administrator with full access to the system.",
                             RoleName = "Admin",
                             RoleType = 0
@@ -98,7 +94,6 @@ namespace WebAppEF.AdventureS.Migrations
                         new
                         {
                             Id = 2,
-                            CreatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             RoleDescription = "Developer with access to development tools and resources.",
                             RoleName = "Developer",
                             RoleType = 1
@@ -106,7 +101,6 @@ namespace WebAppEF.AdventureS.Migrations
                         new
                         {
                             Id = 3,
-                            CreatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             RoleDescription = "Manager with access to management tools and resources.",
                             RoleName = "Manager",
                             RoleType = 2
@@ -114,7 +108,6 @@ namespace WebAppEF.AdventureS.Migrations
                         new
                         {
                             Id = 4,
-                            CreatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             RoleDescription = "Tester with acces to some internal resources.",
                             RoleName = "Tester",
                             RoleType = 3

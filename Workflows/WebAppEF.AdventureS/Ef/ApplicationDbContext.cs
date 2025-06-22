@@ -1,6 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using System.Threading;
+using System.Transactions;
 
 namespace WebAppEF.AdventureS.Ef;
 
@@ -22,6 +25,10 @@ public class User
     public Role Role { get; set; }
 
     public byte[] RowVersion { get; set; }
+
+    public int? ProjectId { get; set; }
+
+    public Project Project { get; set; }
 
     public ICollection<UserTypeMapping> UserTypeMappings { get; set; }
 }
@@ -45,7 +52,7 @@ public class UserTypeMapping
 
     public User User { get; set; }
 
-    public int UserTypeId { get; set; }
+    public int? UserTypeId { get; set; }
 
     public UserType UserType { get; set; }
 
@@ -73,6 +80,19 @@ public class RoleTypes
     public RoleType RoleType { get; set; }
 
     public string RoleDescription { get; set; }
+
+    public DateTime? UpdatedDate { get; set; }
+
+    public DateTime CreatedDate { get; set; }
+}
+
+public class Project
+{
+    public int Id { get; set; }
+
+    public string ProjectName { get; set; }
+
+    public ICollection<User> Users { get; set; }
 }
 
 public enum RoleType
@@ -98,6 +118,22 @@ public sealed class ApplicationDbContext : DbContext
     public DbSet<UserType> UserTypes { get; set; }
 
     public DbSet<UserTypeMapping> UserTypeMappings { get; set; }
+
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        var strategy = Database.CreateExecutionStrategy();
+
+        return await strategy.ExecuteAsync(async () =>
+        {
+            await using var transaction = await Database.BeginTransactionAsync(cancellationToken);
+
+            var result = await base.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+
+            return result;
+        });
+    }
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -200,5 +236,17 @@ public sealed class ApplicationDbContext : DbContext
         modelBuilder.Entity<UserTypeMapping>().Property(x => x.CreatedBy)
             .HasMaxLength(150)
             .IsRequired(true);
+
+        modelBuilder.Entity<Project>().ToTable("Project", "mad");
+        modelBuilder.Entity<Project>().HasKey(x => x.Id);
+
+        modelBuilder.Entity<Project>().Property(x => x.ProjectName)
+            .HasMaxLength(250)
+            .IsRequired();
+
+        modelBuilder.Entity<User>().HasOne(x => x.Project)
+            .WithMany(x => x.Users)
+            .HasForeignKey(x => x.ProjectId)
+            .IsRequired(false);
     }
 }
