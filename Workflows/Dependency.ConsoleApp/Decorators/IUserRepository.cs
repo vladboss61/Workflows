@@ -37,8 +37,16 @@ public sealed class RetryDecoratorUserRepository : IUserRepository
         {
             Console.WriteLine($"Attempt: {attempts}");
 
-            _userRepository.ChangeUserAsync();
-            attempts++;
+            try
+            {
+                _userRepository.ChangeUserAsync();
+                return;
+            }
+            catch (Exception _)
+            {
+               attempts++;
+               Task.Delay(1000);
+            }
         }
     }
 }
