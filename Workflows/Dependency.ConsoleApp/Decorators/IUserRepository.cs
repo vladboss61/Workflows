@@ -24,6 +24,7 @@ public class UserRepository : IUserRepository
 
 public sealed class RetryDecoratorUserRepository : IUserRepository
 {
+    private const int RetryMaxAttempts = 10;
     private readonly IUserRepository _userRepository;
 
     public RetryDecoratorUserRepository(IUserRepository userRepository)
@@ -34,9 +35,8 @@ public sealed class RetryDecoratorUserRepository : IUserRepository
     public void ChangeUserAsync()
     {
         int attempts = 1;
-        int retryMaxAttempts = 5;
         
-        while (attempts <= retryMaxAttempts)
+        while (attempts <= RetryMaxAttempts)
         {
             Console.WriteLine($"Attempt: {attempts}");
 
