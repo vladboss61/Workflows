@@ -1,9 +1,6 @@
-﻿using Azure;
-using Dapper;
-using Microsoft.Data.SqlClient;
+﻿using Dependency.ConsoleApp.Decorators;
 using Microsoft.Extensions.DependencyInjection;
 using System;
-using System.Linq;
 
 namespace Dependency.ConsoleApp;
 
@@ -38,6 +35,10 @@ internal sealed class Program
     public static void Main(string[] args)
     {
         var serviceCollection = new ServiceCollection();
+
+        //serviceCollection.AddDecorator<IUserRepository, UserRepository, RetryDecoratorUserRepository>(ServiceLifetime.Scoped);
+        serviceCollection.AddScopedDecorator<IUserRepository, UserRepository, RetryDecoratorUserRepository>();
+
         serviceCollection.AddScoped<IServiceA, ServiceA>();
         serviceCollection.AddScoped<IServiceB, ServiceB>();
 
@@ -50,6 +51,11 @@ internal sealed class Program
                 //ValidateOnBuild = true,
                 ValidateScopes = true
             });
+
+        using var scope1 = serviceProvider.CreateScope();
+        var userRepository = scope1.ServiceProvider.GetService<IUserRepository>();
+
+        userRepository.ChangeUserAsync();
 
         try
         {
