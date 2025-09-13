@@ -37,11 +37,11 @@ internal sealed class Program
         var serviceCollection = new ServiceCollection();
 
         //serviceCollection.AddDecorator<IUserRepository, UserRepository, RetryDecoratorUserRepository>(ServiceLifetime.Scoped);
-        serviceCollection.AddScopedDecorator<IUserRepository, UserRepository, RetryDecoratorUserRepository>();
 
         serviceCollection.AddScoped<IServiceA, ServiceA>();
         serviceCollection.AddScoped<IServiceB, ServiceB>();
 
+        serviceCollection.AddScopedDecorator<IUserRepository, UserRepository, RetryDecoratorUserRepository>();
         var serviceProvider = serviceCollection.BuildServiceProvider(
             new ServiceProviderOptions
             {
