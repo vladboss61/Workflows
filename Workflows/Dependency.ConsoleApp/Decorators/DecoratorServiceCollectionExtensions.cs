@@ -5,11 +5,11 @@ namespace Dependency.ConsoleApp.Decorators;
 public static class Decorator1ServiceCollectionExtensions
 {
     public static IServiceCollection AddDecorator<TInterface, TImplementation, TDecorator1>(
-                this IServiceCollection services,
-                ServiceLifetime lifetime = ServiceLifetime.Transient)
-                    where TInterface : class
-                    where TImplementation : class, TInterface
-                    where TDecorator1 : class, TInterface
+        this IServiceCollection services,
+        ServiceLifetime lifetime = ServiceLifetime.Transient)
+            where TInterface : class
+            where TImplementation : class, TInterface
+            where TDecorator1 : class, TInterface
     {
         services.Add(new ServiceDescriptor(typeof(TImplementation), typeof(TImplementation), lifetime));
 
