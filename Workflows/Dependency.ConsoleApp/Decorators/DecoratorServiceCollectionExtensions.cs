@@ -82,22 +82,22 @@ public static class Decorator2ServiceCollectionExtensions
         return services.AddDecorator<TInterface, TImplementation, TDecorator1, TDecorator2>(ServiceLifetime.Singleton);
     }
 
-    public static IServiceCollection AddScopedDecorator<TService, TImplementation, TDecorator1, TDecorator2>(this IServiceCollection services)
-        where TService : class
-        where TImplementation : class, TService
-        where TDecorator1 : class, TService
-        where TDecorator2 : class, TService
+    public static IServiceCollection AddScopedDecorator<TInterface, TImplementation, TDecorator1, TDecorator2>(this IServiceCollection services)
+        where TInterface : class
+        where TImplementation : class, TInterface
+        where TDecorator1 : class, TInterface
+        where TDecorator2 : class, TInterface
     {
-        return services.AddDecorator<TService, TImplementation, TDecorator1>(ServiceLifetime.Scoped);
+        return services.AddDecorator<TInterface, TImplementation, TDecorator1>(ServiceLifetime.Scoped);
     }
 
-    public static IServiceCollection AddTransientDecorator<TService, TImplementation, TDecorator1, TDecorator2>(this IServiceCollection services)
-        where TService : class
-        where TImplementation : class, TService
-        where TDecorator1 : class, TService
-        where TDecorator2 : class, TService
+    public static IServiceCollection AddTransientDecorator<TInterface, TImplementation, TDecorator1, TDecorator2>(this IServiceCollection services)
+        where TInterface : class
+        where TImplementation : class, TInterface
+        where TDecorator1 : class, TInterface
+        where TDecorator2 : class, TInterface
     {
-        return services.AddDecorator<TService, TImplementation, TDecorator1, TDecorator2>(ServiceLifetime.Transient);
+        return services.AddDecorator<TInterface, TImplementation, TDecorator1, TDecorator2>(ServiceLifetime.Transient);
     }
 }
 
@@ -136,23 +136,23 @@ public static class Decorator3ServiceCollectionExtensions
         return services.AddDecorator<TInterface, TImplementation, TDecorator1, TDecorator2, TDecorator3>(ServiceLifetime.Singleton);
     }
 
-    public static IServiceCollection AddScopedDecorator<TService, TImplementation, TDecorator1, TDecorator2, TDecorator3>(this IServiceCollection services)
-        where TService : class
-        where TImplementation : class, TService
-        where TDecorator1 : class, TService
-        where TDecorator2 : class, TService
-        where TDecorator3 : class, TService
+    public static IServiceCollection AddScopedDecorator<TInterface, TImplementation, TDecorator1, TDecorator2, TDecorator3>(this IServiceCollection services)
+        where TInterface : class
+        where TImplementation : class, TInterface
+        where TDecorator1 : class, TInterface
+        where TDecorator2 : class, TInterface
+        where TDecorator3 : class, TInterface
     {
-        return services.AddDecorator<TService, TImplementation, TDecorator1, TDecorator2, TDecorator3>(ServiceLifetime.Scoped);
+        return services.AddDecorator<TInterface, TImplementation, TDecorator1, TDecorator2, TDecorator3>(ServiceLifetime.Scoped);
     }
 
-    public static IServiceCollection AddTransientDecorator<TService, TImplementation, TDecorator1, TDecorator2, TDecorator3>(this IServiceCollection services)
-        where TService : class
-        where TImplementation : class, TService
-        where TDecorator1 : class, TService
-        where TDecorator2 : class, TService
-        where TDecorator3 : class, TService
+    public static IServiceCollection AddTransientDecorator<TInterface, TImplementation, TDecorator1, TDecorator2, TDecorator3>(this IServiceCollection services)
+        where TInterface : class
+        where TImplementation : class, TInterface
+        where TDecorator1 : class, TInterface
+        where TDecorator2 : class, TInterface
+        where TDecorator3 : class, TInterface
     {
-        return services.AddDecorator<TService, TImplementation, TDecorator1, TDecorator2, TDecorator3>(ServiceLifetime.Transient);
+        return services.AddDecorator<TInterface, TImplementation, TDecorator1, TDecorator2, TDecorator3>(ServiceLifetime.Transient);
     }
 }
