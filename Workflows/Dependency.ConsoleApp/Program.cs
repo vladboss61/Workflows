@@ -1,9 +1,5 @@
-﻿using Azure;
-using Dapper;
-using Microsoft.Data.SqlClient;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using System;
-using System.Linq;
 
 namespace Dependency.ConsoleApp;
 
@@ -41,6 +37,7 @@ internal sealed class Program
         serviceCollection.AddScoped<IServiceA, ServiceA>();
         serviceCollection.AddScoped<IServiceB, ServiceB>();
 
+
         var serviceProvider = serviceCollection.BuildServiceProvider(
             new ServiceProviderOptions
             {
@@ -60,11 +57,12 @@ internal sealed class Program
             Console.WriteLine($"An error occurred during resolving from root: {ex.Message}");
         }
 
-        using (var scope = serviceProvider.CreateScope())
+        using (IServiceScope scope = serviceProvider.CreateScope())
         {
             var serviceB = scope.ServiceProvider.GetService<IServiceB>();
             serviceB.Example();
         }
+
 
         Console.WriteLine("Hello, World!");
     }

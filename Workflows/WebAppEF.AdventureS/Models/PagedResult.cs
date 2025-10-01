@@ -2,6 +2,8 @@
 
 namespace WebAppEF.AdventureS.Models;
 
+
+
 public class PagedResult<T>
 {
     public IEnumerable<T> Items { get; set; }
